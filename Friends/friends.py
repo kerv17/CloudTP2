@@ -44,7 +44,7 @@ if __name__ == "__main__":
     data = spark.read.text(filepath).rdd.map(lambda line: processInput(line))
     relations = data.flatMap(lambda parsed_line: relations(parsed_line))
     reduced = relations.reduceByKey(reduce).filter(lambda relation: not relation[1][0])
-    recommendations = reduced.map(lambda user: (user[0][0],([0][1],user[1][1]))).groupByKey().map(map)
+    recommendations = reduced.map(lambda user: (user[0][0],(user[0][1],user[1][1]))).groupByKey().map(map)
     
     
     print("User: <id> Friends : [<id>(<numberOfConnection>)]")
