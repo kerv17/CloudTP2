@@ -41,7 +41,7 @@ if __name__ == "__main__":
     filepath = "soc-LiveJournal1Adj.txt"
     spark = SparkSession.builder.master("local").appName("FYMK").getOrCreate()
     #Map friends from textfile using l
-    data = spark.read.text(input).rdd.map(lambda line: processInput(line))
+    data = spark.read.text(filepath).rdd.map(lambda line: processInput(line))
     relations = data.flatMap(lambda parsed_line: relations(parsed_line))
     reduced = relations.reduceByKey(reduce).filter(lambda relation: not relation[1][0])
     recommendations = reduced.map(lambda user: (user[0][0],([0][1],user[1][1]))).groupByKey().map(map)
