@@ -21,10 +21,10 @@ export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
 
 # PG4300.TXT experiment
 echo "Wordcount on pg4300.txt with hadoop"
-{ time hadoop jar /usr/local/hadoop/share/hadoop/mapreduce/hadoop-mapreduce-examples-3.3.1.jar wordcount pg4300.txt output_pg4300 ; } 2> time_hadoop_pg4300.txt
+{ time hadoop jar /usr/local/hadoop/share/hadoop/mapreduce/hadoop-mapreduce-examples-3.3.1.jar wordcount Datasets/pg4300.txt output_pg4300 ; } 2> time_hadoop_pg4300.txt
 
 echo "Wordcount on pg4300.txt with linux cat"
-{ time cat pg4300.txt | tr ' ' '\n' | sort | uniq -c ; } 2> time_linux_pg4300.txt
+{ sudo time cat Datasets/pg4300.txt | tr ' ' '\n' | sort | uniq -c ; } 2> time_linux_pg4300.txt
 
 echo "Installing tinyurl datasets in input_datasets"
 hdfs dfs -mkdir input_datasets
@@ -49,20 +49,20 @@ sudo rm -r output_hadoop_datasets
 
 
 echo "Installing spark"
-wget https://dlcdn.apache.org/spark/spark-3.3.1/spark-3.3.1-bin-hadoop3.tgz
-tar -xvzf spark-3.3.1-bin-hadoop3.tgz
-sudo mv spark-3.3.1-bin-hadoop3 /usr/local/spark
-sudo rm -r spark-3.3.1-bin-hadoop3.tgz
+wget https://dlcdn.apache.org/spark/spark-3.5.0/spark-3.5.0-bin-hadoop3.tgz
+tar -xvzf spark-3.5.0-bin-hadoop3.tgz
+sudo mv spark-3.5.0-bin-hadoop3 /usr/local/spark
+sudo rm -r spark-3.5.0-bin-hadoop3.tgz
 export SPARK_HOME=/usr/local/spark
 export PATH=$PATH:$SPARK_HOME/bin:$SPARK_HOME/sbin
 export PYSPARK_PYTHON=/usr/bin/python3
 
 echo "Wordcount on tinyurl datasets with pyspark"
-{ time spark-submit Wordcount/wordcount_spark.py input_datasets output_spark_datasets ; } 2> time_spark_datasets_1.txt
+{ time spark-submit WordCount/wordcount_spark.py input_datasets output_spark_datasets ; } 2> time_spark_datasets_1.txt
 sudo rm -r output_spark_datasets
-{ time spark-submit Wordcount/wordcount_spark.py input_datasets output_spark_datasets ; } 2> time_spark_datasets_2.txt
+{ time spark-submit WordCount/wordcount_spark.py input_datasets output_spark_datasets ; } 2> time_spark_datasets_2.txt
 sudo rm -r output_spark_datasets
-{ time spark-submit Wordcount/wordcount_spark.py input_datasets output_spark_datasets ; } 2> time_spark_datasets_3.txt
+{ time spark-submit WordCount/wordcount_spark.py input_datasets output_spark_datasets ; } 2> time_spark_datasets_3.txt
 
 #echo "Run friends.py"
 #spark-submit friends.py
