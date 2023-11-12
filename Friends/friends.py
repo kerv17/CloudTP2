@@ -1,57 +1,56 @@
 from pyspark.sql import SparkSession
-from itertools import combinations
-import copy
+from itertools import permutations
+from operator import add
 
 SUGGESTION_AMOUNT = 10
 USERS = ["924", "8941", "8942", "9019", "9020", "9021", "9022", "9990", "9992", "9993"]
+INPUT = "soc-LiveJournal1Adj.txt"
+OUTPUT = "recommandations.txt"
 
-def mutuals(data_line):
-    user, friends = data_line
-    return [(combo, ('mutual',False)) for combo in list(combinations(friends,2))]
-def directs(data_line):
-    user, friends = data_line
-    return [((user,friend),("direct",True)) for friend in friends]
+
 
 
 def parse_line(line):
-    line_split = line[0].split('\t')
+    line_split = line.split('\t')
     user = int(line_split[0])
-    #Prevent crashes for missing tab
-    if len(line_split) == 1: line_split.append("")
-    #Exit if empty string
-    if len(line_split[1]) == 0: return (id, [])
-    #Convert friends to list of ints
-    friends = [int(id) for id in line_split[1].split(',')]
-    return (user, friends)
+    
+    if len(line_split) == 1: return []
 
-def relations(parsed_line):
-    return directs(parsed_line) + mutuals(parsed_line)
+    friends = line_split[1].split(',')
+    mutuals = [(users, (False, 1)) for users in list(permutations(friends, 2))]
+    direct = [((user,friend), (True, 1)) for friend in friends]
+    return mutuals + direct
+
+def map_line(line):
+    connections = sorted(line[1], key=lambda x: x[1], reverse=True)
+    return (line[0], connections[:SUGGESTION_AMOUNT])
+
+def reduce_line(user1, user2):
+    return (user1[0] or user2[0], user1[1]+user2[1] )
 
 
-
-def map(line):
-    sortedMutuals = sorted(line[1], key=lambda x: x[1], reverse=True)
-    return (line[0],sortedMutuals[:SUGGESTION_AMOUNT])
-
-def reduce(A,B):
-    return (A[0] or B[0], A[1]+B[1])
+def format_line(user, line):
+    print(line)
+    usersToRecommend = line
+    return f"{user}\t{",".join([str(x[0]) for x in usersToRecommend])}"
 
 
 if __name__ == "__main__":
-    filepath = "soc-LiveJournal1Adj.txt"
+    
     spark = SparkSession.builder.master("local").appName("FYMK").getOrCreate()
-    #Map friends from textfile using l
-    data = spark.read.text(filepath).rdd.map(lambda line: processInput(line))
-    relations = data.flatMap(lambda parsed_line: relations(parsed_line))
-    reduced = relations.reduceByKey(reduce).filter(lambda relation: not relation[1][0])
-    recommendations = reduced.map(lambda user: (user[0][0],(user[0][1],user[1][1]))).groupByKey().map(map)
-    
-    
-    print("User: <id> Friends : [<id>(<numberOfConnection>)]")
-    for user in USERS:
-        print("User: " + user + " Friends : ", end = '')
-        for friend, connection in data.lookup(user)[0]:
-            print(friend+"("+ str(connection) +")", end = ' ')
-        print('')
+    sc = spark.sparkContext
 
-    spark.stop()    
+    data = sc.textFile(INPUT)
+
+    data = data.flatMap(parse_line) # Parse Text
+    data = data.reduceByKey(reduce_line) # Reduce similar connections to one
+    data = data.filter(lambda data : data[1][0] == False) # Remove if already friends
+    data = data.map(lambda user: (user[0][0],(user[0][1],user[1][1]))) # Change to key = user, data=(friendId, numberOfMutualFriends)
+    data = data.groupByKey() # Reduce User
+    data = data.map(map_line) # Sort friends
+    
+    with open(OUTPUT, 'w') as f:
+        for user in USERS:
+            f.write(format_line(user,data.lookup(user)[0]) + '\n')
+    spark.stop()
+    #...
