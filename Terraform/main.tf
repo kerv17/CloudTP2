@@ -83,9 +83,9 @@ resource "aws_security_group" "security_gp" {
   }
 }
 
-resource "aws_key_pair" "my_key" {
-  key_name   = "my-key-name"
-  public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCxWUIcTnH5DnbvIFVi97bP8My3es+ir283o+8W6soQgfPkAEJT6yl6yGDvgmZIgu2jTB8C6zEgXkCtRTCytU+Vbe1l6++duaDQrOFFA06ID4GE39wob58TDT0DIKz7QAHvBMCabYnLlNi8XOHaZEO7WxlO9pgC9CO51OUxQoNu1yQgsW82RmsKxAszT5+PBd4T5G0Z6U98Yp9uqBOl+ntE9DmFfqlahCheW5jkm6xmXn/y3+IPW4pl32Q/gqkAlbsVNVMbkCwqST/j3amw7OEiSjO+E8nXWKqgnMTxi1K7stWokcZlEz0gEkHgw23SnxlaTTcmYstpdg0uNiYBraop rsa-key-20231111"
+resource "aws_key_pair" "my_keyy" {
+  key_name   = "my-key-nassme"
+  public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDat9II8dtn5bNMsFrpQQNlSybtVCnKP3mdx+2N8cqZxhQGxEuvZfbq15qPuOFshmyhsPDmC9UxdK08cuLfscOwC73DUJ24BbQNlJBAH4mnh7TOida3tbWNByF6F9OvKW6FMZdVnfVtcBZAmkAr18T82/EiPQGp4fVpuquNwrZtaW2XVETqQbh97Y/YMH7rVLfLhn9hh+jB9o2XJCBMcN+3F5QNmFfPm9Ca7KNIr13oEcMHZGVoI4GRrvz/alZgsiMO+ot1ubuAJk0U/jQMoWIqGMR6pxqvHRURvAcQxvOToTJOx58ln2hG5kGxgMDqd73aASf9M9HLkZJHqFkM0SFt rsa-key-20231113"
 }
 
 resource "aws_instance" "instances_m4" {
@@ -95,7 +95,7 @@ resource "aws_instance" "instances_m4" {
   availability_zone      = "us-east-1c"
   user_data              = file(var.Data_path)
   count                  = var.m4_instance_count
-  key_name               = aws_key_pair.my_key.key_name
+  key_name               = aws_key_pair.my_keyy.key_name
 
   tags = merge(var.instance_tags, {
     "Name" = "M4"
